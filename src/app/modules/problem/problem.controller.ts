@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import nodemailer from 'nodemailer';
 import path from 'path';
+import fs from 'fs';
 
 export const reportProblem = async (req: Request, res: Response): Promise<void> => {
   const { email, description } = req.body;
@@ -20,21 +21,35 @@ export const reportProblem = async (req: Request, res: Response): Promise<void> 
       },
     });
 
+    // Ensure correct file path resolution
+    const filePath = screenshot ? path.resolve(__dirname, '../../uploads', screenshot.filename) : null;
+
+    // Log the file path to help debug
+    console.log('Screenshot file path:', filePath);
+
+    // Set up the mail options
     const mailOptions = {
       from: process.env.EMAIL_USER, // Admin email
       to: process.env.ADMIN_EMAIL, // Admin email receiving the message
       subject: 'User Reported Problem',
       text: `Email: ${email}\n\nDescription: ${description}`,
       replyTo: email, // User's email for replies
-      attachments: screenshot
+      attachments: screenshot && filePath
         ? [
             {
               filename: screenshot.originalname,
-              path: path.join(__dirname, '..', 'uploads', screenshot.filename),
+              path: filePath, // Corrected file path here
             },
           ]
         : [],
     };
+
+    // Check if the file exists before sending the email
+    if (screenshot && filePath && !fs.existsSync(filePath)) {
+      console.error('File not found at path:', filePath); // Log the path if file is not found
+      res.status(500).json({ success: false, message: 'Screenshot file not found.' });
+      return;
+    }
 
     // Send the email
     await transporter.sendMail(mailOptions);

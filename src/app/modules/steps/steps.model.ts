@@ -7,6 +7,7 @@ export interface IStep extends Document {
   caloriesBurned: number;
   date: Date;
   hourlySteps: { [hour: number]: number };
+  minutesWalked: number;
 }
 
 const StepSchema: Schema = new Schema(
@@ -16,6 +17,8 @@ const StepSchema: Schema = new Schema(
     distanceKm: { type: Number, required: true },
     caloriesBurned: { type: Number, required: true },
     date: { type: Date, required: true },
+    hourlySteps: { type: Map, of: Number, default: {} }, 
+    minutesWalked: { type: Number, required: true }, 
   },
   { timestamps: true }
 );

@@ -68,16 +68,21 @@ router.get('/blood-pressure-check', authenticate, async (req: Request, res: Resp
     const { systolicThreshold, diastolicThreshold } = user;
 
     let alertMessage = '';
-    if (systolicThreshold != null && diastolicThreshold != null && (bpData.systolic > systolicThreshold || bpData.diastolic > diastolicThreshold)) {
+    // Check if blood pressure exceeds the threshold
+    if (bpData.systolic > (systolicThreshold ?? 0) || bpData.diastolic > (diastolicThreshold ?? 0)) {
       alertMessage = `Warning: Your BP of ${bpData.systolic}/${bpData.diastolic} exceeds the healthy threshold. Please take action and consult a doctor.`;
+    } else {
+      // Success message when blood pressure is within the threshold
+      alertMessage = `Your BP of ${bpData.systolic}/${bpData.diastolic} is within the healthy range. Keep up the good work!`;
     }
 
     res.status(200).json({ success: true, bpData, alertMessage });
   } catch (error) {
-    const errorMessage = (error instanceof Error) ? error.message : 'An unknown error occurred';
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
     res.status(500).json({ success: false, message: errorMessage });
   }
 });
+
 
 router.get('/blood-pressure-zones', authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
